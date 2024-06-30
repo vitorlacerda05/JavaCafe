@@ -94,77 +94,70 @@ public class Vendas {
     // Methods
 
     public void inputVenda() {
-        JTextField clienteField = new JTextField();
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("Digite o nome do cliente:"), BorderLayout.NORTH);
-        panel.add(clienteField, BorderLayout.CENTER);
+        // Adicionar nome do cliente
+        this.cliente = JOptionPane.showInputDialog("Digite o nome do cliente:");
 
-        int option = JOptionPane.showConfirmDialog(null, panel, "Nova Venda - Cliente", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (option == JOptionPane.OK_OPTION) {
-            this.cliente = clienteField.getText();
-        } else {
-            JOptionPane.showMessageDialog(null, "Operação cancelada.");
+        // Verificar se o cliente cancelou a entrada
+        if (this.cliente == null) {
             return;
         }
 
+        // Adicionar horário da venda
         this.dataHora = LocalDateTime.now();
 
         while (true) {
-            JTextField itemIDField = new JTextField();
-            JTextField quantidadeField = new JTextField();
-            Object[] message = {
-                "Digite o ID do item (0 para finalizar):", itemIDField,
-                "Digite a quantidade:", quantidadeField
-            };
+            String itemIDStr = JOptionPane.showInputDialog("Digite o ID do item (0 para finalizar):");
+            if (itemIDStr == null || itemIDStr.trim().isEmpty()) {
+                break;
+            }
 
-            int result = JOptionPane.showConfirmDialog(null, message, "Adicionar Produto", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
-                int itemID;
-                int quantidade;
-                try {
-                    itemID = Integer.parseInt(itemIDField.getText());
-                    if (itemID == 0) {
-                        break;
-                    }
-                    quantidade = Integer.parseInt(quantidadeField.getText());
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(null, "ID ou quantidade inválidos.");
+            int itemID;
+            try {
+                itemID = Integer.parseInt(itemIDStr.trim());
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "ID do item inválido. Por favor, insira um número válido.");
+                continue;
+            }
+
+            if (itemID == 0) {
+                break;
+            }
+
+            ItemMenu item = consultarItemNoBanco(itemID);
+
+            if (item != null) {
+                String quantidadeStr = JOptionPane.showInputDialog("Digite a quantidade que foi vendida do produto:");
+                if (quantidadeStr == null || quantidadeStr.trim().isEmpty()) {
                     continue;
                 }
 
-                ItemMenu item = consultarItemNoBanco(itemID);
+                int quantidade;
+                try {
+                    quantidade = Integer.parseInt(quantidadeStr.trim());
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "Quantidade inválida. Por favor, insira um número válido.");
+                    continue;
+                }
 
-                if (item != null) {
-                    recalcularEstoque(item, quantidade, 1);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Produto não encontrado no banco de dados.");
+                if (quantidade > 0) {
+                    ItemVenda itemVenda = new ItemVenda(item, quantidade);
+                    itensVendidos.add(itemVenda);
+
+                    // Atualizar a quantidade no estoque
+                    item.setQuantidade(item.getQuantidade() - quantidade);
+                    if (item.getQuantidade() == 0) {
+                        item.setDisponivel(false);
+                    }
+                    atualizarQuantidadeNoBanco(item);
                 }
             } else {
-                break;
+                JOptionPane.showMessageDialog(null, "Produto não encontrado com o ID: " + itemID);
             }
         }
-
-        for (ItemVenda item : itensVendidos) {
-            valorVenda += item.getSubtotal();
-            valorCusto += item.getQuantidade() * consultarPrecoCustoNoBanco(item.getItemMenu().getID());
-        }
-
-        valorLucro = valorVenda - valorCusto;
-
-        int desconto = recalcularDesconto();
-
-        valorDesconto = valorVenda * (desconto * 0.01); // Valor do desconto
-        valorVenda = valorVenda - valorDesconto; // Valor da venda com o desconto
-        valorLucro = valorVenda - valorCusto - valorDesconto;
-
-        JOptionPane.showMessageDialog(null,
-            String.format("Venda finalizada!\nValor total da venda: R$ %.2f\nValor total do custo: R$ %.2f\nValor total do lucro: R$ %.2f",
-                valorVenda, valorCusto, valorLucro));
     }
 
-    // Consultar item no banco de dados pelo ID
-    private ItemCafe consultarItemNoBanco(int itemID) {
-        String sql = "SELECT * FROM ItemMenu WHERE ID = ?";
+    private ItemMenu consultarItemNoBanco(int itemID) {
+        String sql = "SELECT * FROM ITEMMENU WHERE id = ?";
         try (Connection conn = ConnectionDB.getDatabaseConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -172,7 +165,7 @@ public class Vendas {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    int id = rs.getInt("ID");
+                    int id = rs.getInt("id");
                     int codigo = rs.getInt("codigo");
                     int tipo = rs.getInt("tipo");
                     String nome = rs.getString("nome");
@@ -192,28 +185,8 @@ public class Vendas {
         return null;
     }
 
-    // Consultar preço de custo no banco de dados pelo ID do item
-    private double consultarPrecoCustoNoBanco(int itemID) {
-        String sql = "SELECT precoCusto FROM ItemMenu WHERE ID = ?";
-        try (Connection conn = ConnectionDB.getDatabaseConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, itemID);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getDouble("precoCusto");
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0.0; // Retorna 0.0 se não encontrar o preço de custo
-    }
-
     private void atualizarQuantidadeNoBanco(ItemMenu item) {
-        String sql = "UPDATE ItemMenu SET quantidade = ?, disponivel = ? WHERE ID = ?";
+        String sql = "UPDATE ITEMMENU SET quantidade = ?, disponivel = ? WHERE id = ?";
         try (Connection conn = ConnectionDB.getDatabaseConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 

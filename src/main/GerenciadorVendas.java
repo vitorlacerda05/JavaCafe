@@ -41,19 +41,58 @@ public class GerenciadorVendas {
         Vendas novaVenda = new Vendas(itens);
         novaVenda.inputVenda();
 
+        // Verificar se há itens vendidos antes de continuar
+        if (novaVenda.getItensVendidos().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Nenhum produto adicionado à venda. Venda cancelada.");
+            return;
+        }
+
+        // Verificar se a venda foi cancelada
+        if (novaVenda.getCliente() == null || novaVenda.getDataHora() == null) {
+            JOptionPane.showMessageDialog(null, "Venda cancelada.");
+            return;
+        }
+
+        // Calcular o valor de custo e o valor total da venda
+        double valorCusto = novaVenda.getItensVendidos().stream()
+                .mapToDouble(item -> item.getQuantidade() * item.getItemMenu().getPrecoCusto())
+                .sum();
+        double valorVenda = novaVenda.getItensVendidos().stream().mapToDouble(ItemVenda::getSubtotal).sum();
+
+        // Perguntar o desconto após o cálculo dos valores de custo e venda
+        String descontoStr = JOptionPane.showInputDialog("Digite o valor da porcentagem de desconto [0-100](0 para não dar desconto):");
+        int desconto;
+        try {
+            desconto = Integer.parseInt(descontoStr);
+        } catch (NumberFormatException e) {
+            desconto = 0; // Caso o valor digitado não seja válido, considerar como 0
+        }
+
+        if (desconto < 0 || desconto > 100) {
+            JOptionPane.showMessageDialog(null, "Porcentagem de desconto inválida. Considerando desconto como 0.");
+            desconto = 0;
+        }
+
+        // Calcular o valor do desconto e ajustar o valor da venda e do lucro
+        double valorDesconto = valorVenda * (desconto / 100.0);
+        novaVenda.setValorDesconto(valorDesconto);
+        novaVenda.setValorVenda(valorVenda);
+        novaVenda.setValorCusto(valorCusto);
+        novaVenda.setValorLucro(valorVenda - valorDesconto - valorCusto);
+
         // Atualizar históricos
-        valorHistoricoCusto += novaVenda.getValorCusto();
-        valorHistoricoVenda += novaVenda.getValorVenda();
+        valorHistoricoCusto += valorCusto;
+        valorHistoricoVenda += valorVenda;
         valorHistoricoLucro += novaVenda.getValorLucro();
 
         // Inserir a nova venda no banco de dados
         try {
             inserirVendaNoBanco(novaVenda);
         } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Erro ao inserir nova venda: " + e.getMessage());
+            System.err.println("Erro ao inserir nova venda: " + e.getMessage());
         }
     }
+
 
     private void inserirVendaNoBanco(Vendas novaVenda) throws SQLException {
         String vendaSql = "INSERT INTO vendas (dataHora, cliente, valorVenda, valorCusto, valorLucro, valorDesconto) VALUES (?, ?, ?, ?, ?, ?)";
