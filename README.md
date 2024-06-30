@@ -128,7 +128,7 @@ Classe principal que inicializa a aplicação.
 ## Diagramas
 
 ### Diagrama de Classes
-![Diagrama de Classes](
+![Diagrama de Classes](classDiagram.png)
 
 ## Procedimentos de Construção
 
