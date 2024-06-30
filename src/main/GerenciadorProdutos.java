@@ -2,156 +2,85 @@ package main;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-
 import java.awt.BorderLayout;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-
 import connection.ConnectionDB;
 
 public class GerenciadorProdutos {
-	private static Map<Integer, ItemMenu> itens = new HashMap<>(); // Hash para guardar os produtos
-	private int proximoID = 1;
-	private int tempID = 1;
-	Scanner scanner = new Scanner(System.in);
+    private static Map<Integer, ItemMenu> itens = new HashMap<>(); // Hash para guardar os produtos
+    private int proximoID = 1;
+    private int tempID = 1;
+    Scanner scanner = new Scanner(System.in);
 
-	// Método para criar item e adicionar no banco de dados
-	public void createItem() {
-		JTextField codigoField = new JTextField();
-		JTextField tipoField = new JTextField();
-		JTextField nomeField = new JTextField();
-		JTextField precoCustoField = new JTextField();
-		JTextField precoVendaField = new JTextField();
-		JTextField quantidadeField = new JTextField();
-		JTextField descricaoField = new JTextField();
+    // Método para criar item e adicionar no banco de dados
+    public void createItem() {
+        JTextField codigoField = new JTextField();
+        JTextField tipoField = new JTextField();
+        JTextField nomeField = new JTextField();
+        JTextField precoCustoField = new JTextField();
+        JTextField precoVendaField = new JTextField();
+        JTextField quantidadeField = new JTextField();
+        JTextField descricaoField = new JTextField();
 
-		Object[] message = { "Código:", codigoField, "Tipo:", tipoField, "Nome:", nomeField, "Preço de Custo:",
-				precoCustoField, "Preço de Venda:", precoVendaField, "Quantidade:", quantidadeField, "Descrição:",
-				descricaoField };
+        Object[] message = {
+            "Código:", codigoField,
+            "Tipo:", tipoField,
+            "Nome:", nomeField,
+            "Preço de Custo:", precoCustoField,
+            "Preço de Venda:", precoVendaField,
+            "Quantidade:", quantidadeField,
+            "Descrição:", descricaoField
+        };
 
-		int option = JOptionPane.showConfirmDialog(null, message, "Adicionar Produto", JOptionPane.OK_CANCEL_OPTION);
-		if (option == JOptionPane.OK_OPTION) {
-			try {
-				// Verificar se algum campo está vazio
-				if (codigoField.getText().isEmpty() || tipoField.getText().isEmpty() || nomeField.getText().isEmpty()
-						|| precoCustoField.getText().isEmpty() || precoVendaField.getText().isEmpty()
-						|| quantidadeField.getText().isEmpty() || descricaoField.getText().isEmpty()) {
-					throw new IllegalArgumentException("Todos os campos devem ser preenchidos.");
-				}
+        int option = JOptionPane.showConfirmDialog(null, message, "Adicionar Produto", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                if (codigoField.getText().isEmpty() || tipoField.getText().isEmpty() || nomeField.getText().isEmpty() ||
+                    precoCustoField.getText().isEmpty() || precoVendaField.getText().isEmpty() || quantidadeField.getText().isEmpty() ||
+                    descricaoField.getText().isEmpty()) {
+                    throw new IllegalArgumentException("Todos os campos devem ser preenchidos.");
+                }
 
-				int codigo = Integer.parseInt(codigoField.getText());
-				int tipo = Integer.parseInt(tipoField.getText());
-				String nome = nomeField.getText();
-				double precoCusto = Double.parseDouble(precoCustoField.getText());
-				double precoVenda = Double.parseDouble(precoVendaField.getText());
-				int quantidade = Integer.parseInt(quantidadeField.getText());
-				String descricao = descricaoField.getText();
+                int codigo = Integer.parseInt(codigoField.getText());
+                int tipo = Integer.parseInt(tipoField.getText());
+                String nome = nomeField.getText();
+                double precoCusto = Double.parseDouble(precoCustoField.getText());
+                double precoVenda = Double.parseDouble(precoVendaField.getText());
+                int quantidade = Integer.parseInt(quantidadeField.getText());
+                String descricao = descricaoField.getText();
 
-				boolean disponivel = quantidade > 0;
+                boolean disponivel = quantidade > 0;
 
-				Connection connection = null;
-				PreparedStatement produtoPs = null;
-				PreparedStatement itemMenuPs = null;
-				ResultSet generatedKeys = null;
+                String sql = "INSERT INTO ItemMenu (codigo, tipo, nome, precoCusto, precoVenda, disponivel, quantidade, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                try (Connection connection = ConnectionDB.getDatabaseConnection();
+                     PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setInt(1, codigo);
+                    ps.setInt(2, tipo);
+                    ps.setString(3, nome);
+                    ps.setDouble(4, precoCusto);
+                    ps.setDouble(5, precoVenda);
+                    ps.setBoolean(6, disponivel);
+                    ps.setInt(7, quantidade);
+                    ps.setString(8, descricao);
+                    ps.executeUpdate();
 
-				try {
-					connection = ConnectionDB.getDatabaseConnection();
-					connection.setAutoCommit(false);
+                    JOptionPane.showMessageDialog(null, "Produto adicionado com sucesso!");
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "Erro ao adicionar produto: " + e.getMessage());
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Por favor, insira valores válidos para campos numéricos.");
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            }
+        }
+    }
 
-					String produtoSql = "INSERT INTO produtos (nome, preco) VALUES (?, ?)";
-					produtoPs = connection.prepareStatement(produtoSql, PreparedStatement.RETURN_GENERATED_KEYS);
-					produtoPs.setString(1, nome);
-					produtoPs.setDouble(2, precoVenda);
-					produtoPs.executeUpdate();
-
-					generatedKeys = produtoPs.getGeneratedKeys();
-					int produtoID = 0;
-					if (generatedKeys.next()) {
-						produtoID = generatedKeys.getInt(1);
-					} else {
-						connection.rollback();
-						throw new SQLException("Falha ao obter o ID do produto.");
-					}
-
-					String itemMenuSql = "INSERT INTO ITEMMENU (codigo, tipo, nome, precocusto, precovenda, disponivel, quantidade, descricao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-					itemMenuPs = connection.prepareStatement(itemMenuSql);
-					itemMenuPs.setInt(1, codigo);
-					itemMenuPs.setInt(2, tipo);
-					itemMenuPs.setString(3, nome);
-					itemMenuPs.setDouble(4, precoCusto);
-					itemMenuPs.setDouble(5, precoVenda);
-					itemMenuPs.setBoolean(6, disponivel);
-					itemMenuPs.setInt(7, quantidade);
-					itemMenuPs.setString(8, descricao);
-					itemMenuPs.executeUpdate();
-
-					connection.commit();
-
-					JOptionPane.showMessageDialog(null, "Produto adicionado com sucesso!");
-
-					ItemCafe novoItem = new ItemCafe(proximoID, codigo, tipo, nome, precoCusto, precoVenda, quantidade,
-							disponivel, descricao);
-					itens.put(proximoID, novoItem);
-
-					proximoID++;
-
-				} catch (SQLException e) {
-					if (connection != null) {
-						try {
-							connection.rollback();
-						} catch (SQLException ex) {
-							ex.printStackTrace();
-						}
-					}
-					e.printStackTrace();
-					JOptionPane.showMessageDialog(null, "Erro ao adicionar produto: " + e.getMessage());
-				} finally {
-					if (generatedKeys != null) {
-						try {
-							generatedKeys.close();
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-					}
-					if (produtoPs != null) {
-						try {
-							produtoPs.close();
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-					}
-					if (itemMenuPs != null) {
-						try {
-							itemMenuPs.close();
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-					}
-					if (connection != null) {
-						try {
-							connection.setAutoCommit(true);
-							connection.close();
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			} catch (NumberFormatException ex) {
-				JOptionPane.showMessageDialog(null, "Por favor, insira valores válidos para campos numéricos.");
-			} catch (IllegalArgumentException ex) {
-				JOptionPane.showMessageDialog(null, ex.getMessage());
-			}
-		}
-	}
-
-	// Método para editar algum item do banco de dados
+    // Método para editar algum item do banco de dados
     public void editItem() {
         String idStr = JOptionPane.showInputDialog("Digite o ID do produto para editar:");
         if (idStr == null || idStr.isEmpty()) {
@@ -168,7 +97,7 @@ public class GerenciadorProdutos {
 
         ItemCafe item = null;
 
-        String selectSql = "SELECT * FROM ITEMMENU WHERE id = ?";
+        String selectSql = "SELECT * FROM ItemMenu WHERE ID = ?";
         try (Connection connection = ConnectionDB.getDatabaseConnection();
              PreparedStatement selectPs = connection.prepareStatement(selectSql)) {
             selectPs.setInt(1, tempID);
@@ -177,8 +106,8 @@ public class GerenciadorProdutos {
                     int codigo = rs.getInt("codigo");
                     int tipo = rs.getInt("tipo");
                     String nome = rs.getString("nome");
-                    double precoCusto = rs.getDouble("precocusto");
-                    double precoVenda = rs.getDouble("precovenda");
+                    double precoCusto = rs.getDouble("precoCusto");
+                    double precoVenda = rs.getDouble("precoVenda");
                     boolean disponivel = rs.getBoolean("disponivel");
                     int quantidade = rs.getInt("quantidade");
                     String descricao = rs.getString("descricao");
@@ -227,7 +156,7 @@ public class GerenciadorProdutos {
 
                     boolean disponivel = quantidade > 0;
 
-                    String updateSql = "UPDATE ITEMMENU SET codigo = ?, tipo = ?, nome = ?, precocusto = ?, precovenda = ?, disponivel = ?, quantidade = ?, descricao = ? WHERE id = ?";
+                    String updateSql = "UPDATE ItemMenu SET codigo = ?, tipo = ?, nome = ?, precoCusto = ?, precoVenda = ?, disponivel = ?, quantidade = ?, descricao = ? WHERE ID = ?";
                     try (Connection connection = ConnectionDB.getDatabaseConnection();
                          PreparedStatement updatePs = connection.prepareStatement(updateSql)) {
                         updatePs.setInt(1, codigo);
@@ -272,7 +201,25 @@ public class GerenciadorProdutos {
             return;
         }
 
-        String sql = "DELETE FROM ITEMMENU WHERE id = ?";
+        // Verificar se o ID existe
+        String checkSql = "SELECT COUNT(*) FROM ItemMenu WHERE ID = ?";
+        try (Connection connection = ConnectionDB.getDatabaseConnection();
+             PreparedStatement checkPs = connection.prepareStatement(checkSql)) {
+            checkPs.setInt(1, tempID);
+            try (ResultSet rs = checkPs.executeQuery()) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    JOptionPane.showMessageDialog(null, "Produto com ID = " + tempID + " não existe.");
+                    return;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Erro ao verificar existência do produto: " + e.getMessage());
+            return;
+        }
+
+        // Excluir produto
+        String sql = "DELETE FROM ItemMenu WHERE ID = ?";
         try (Connection connection = ConnectionDB.getDatabaseConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, tempID);
@@ -280,14 +227,14 @@ public class GerenciadorProdutos {
             if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(null, "Produto (ID = " + tempID + ") foi excluído com sucesso!");
             } else {
-                JOptionPane.showMessageDialog(null, "Produto não encontrado com o ID: " + tempID);
+                JOptionPane.showMessageDialog(null, "Erro ao excluir o produto. Produto com ID = " + tempID + " não encontrado.");
             }
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Erro ao excluir o produto: " + e.getMessage());
         }
     }
-    
+
     // Método para buscar item por ID
     public ItemMenu buscarItemPorID() {
         String idStr = JOptionPane.showInputDialog("Digite o ID do produto para buscar:");
@@ -305,18 +252,18 @@ public class GerenciadorProdutos {
 
         ItemMenu itemEncontrado = null;
 
-        String sql = "SELECT * FROM ITEMMENU WHERE id = ?";
+        String sql = "SELECT * FROM ItemMenu WHERE ID = ?";
         try (Connection connection = ConnectionDB.getDatabaseConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, tempID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    int id = rs.getInt("id");
+                    int id = rs.getInt("ID");
                     int codigo = rs.getInt("codigo");
                     int tipo = rs.getInt("tipo");
                     String nome = rs.getString("nome");
-                    double precoCusto = rs.getDouble("precocusto");
-                    double precoVenda = rs.getDouble("precovenda");
+                    double precoCusto = rs.getDouble("precoCusto");
+                    double precoVenda = rs.getDouble("precoVenda");
                     boolean disponivel = rs.getBoolean("disponivel");
                     int quantidade = rs.getInt("quantidade");
                     String descricao = rs.getString("descricao");
@@ -358,17 +305,17 @@ public class GerenciadorProdutos {
         JScrollPane scrollPane = new JScrollPane(table);
 
         try (Connection connection = ConnectionDB.getDatabaseConnection();
-             PreparedStatement ps = connection.prepareStatement("SELECT * FROM ITEMMENU");
+             PreparedStatement ps = connection.prepareStatement("SELECT * FROM ItemMenu");
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 model.addRow(new Object[]{
-                    rs.getInt("id"),
+                    rs.getInt("ID"),
                     rs.getInt("codigo"),
                     rs.getInt("tipo"),
                     rs.getString("nome"),
-                    rs.getDouble("precocusto"),
-                    rs.getDouble("precovenda"),
+                    rs.getDouble("precoCusto"),
+                    rs.getDouble("precoVenda"),
                     rs.getBoolean("disponivel"),
                     rs.getInt("quantidade"),
                     rs.getString("descricao")
@@ -383,7 +330,7 @@ public class GerenciadorProdutos {
         frame.setVisible(true);
     }
 
-	public static Map<Integer, ItemMenu> returnItens() { // Retornar a hash de itens
-		return itens;
-	}
+    public static Map<Integer, ItemMenu> returnItens() { // Retornar a hash de itens
+        return itens;
+    }
 }

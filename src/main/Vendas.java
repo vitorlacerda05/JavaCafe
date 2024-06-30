@@ -1,5 +1,8 @@
 package main;
 
+import javax.swing.*;
+
+import java.awt.BorderLayout;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,276 +11,300 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-
 import connection.ConnectionDB;
 
 public class Vendas {
-	private int vendaID;
-	private LocalDateTime dataHora;
-	private String cliente;
-	private List<ItemVenda> itensVendidos; // Lista para adicionar ItemVenda
-	private double valorVenda;
-	private double valorCusto;
-	private double valorLucro;
-	private double valorDesconto;
-	private Map<Integer, ItemMenu> itens;
+    private int vendaID;
+    private LocalDateTime dataHora;
+    private String cliente;
+    private List<ItemVenda> itensVendidos; // Lista para adicionar ItemVenda
+    private double valorVenda;
+    private double valorCusto;
+    private double valorLucro;
+    private double valorDesconto;
+    private Map<Integer, ItemMenu> itens;
 
-	// Constructor
-	public Vendas(Map<Integer, ItemMenu> itens) {
-		this.itens = itens;
-		this.itensVendidos = new ArrayList<>();
-	}
+    // Constructor
+    public Vendas(Map<Integer, ItemMenu> itens) {
+        this.itens = itens;
+        this.itensVendidos = new ArrayList<>();
+    }
 
-	// Getters and Setters
-	public int getVendaID() {
-		return vendaID;
-	}
+    // Getters and Setters
+    public int getVendaID() {
+        return vendaID;
+    }
 
-	public void setVendaID(int vendaID) {
-		this.vendaID = vendaID;
-	}
+    public void setVendaID(int vendaID) {
+        this.vendaID = vendaID;
+    }
 
-	public LocalDateTime getDataHora() {
-		return dataHora;
-	}
+    public LocalDateTime getDataHora() {
+        return dataHora;
+    }
 
-	public void setDataHora(LocalDateTime dataHora) {
-		this.dataHora = dataHora;
-	}
+    public void setDataHora(LocalDateTime dataHora) {
+        this.dataHora = dataHora;
+    }
 
-	public String getCliente() {
-		return cliente;
-	}
+    public String getCliente() {
+        return cliente;
+    }
 
-	public void setCliente(String cliente) {
-		this.cliente = cliente;
-	}
+    public void setCliente(String cliente) {
+        this.cliente = cliente;
+    }
 
-	public double getValorVenda() {
-		return valorVenda;
-	}
+    public double getValorVenda() {
+        return valorVenda;
+    }
 
-	public void setValorVenda(double valorVenda) {
-		this.valorVenda = valorVenda;
-	}
+    public void setValorVenda(double valorVenda) {
+        this.valorVenda = valorVenda;
+    }
 
-	public double getValorLucro() {
-		return valorLucro;
-	}
+    public double getValorLucro() {
+        return valorLucro;
+    }
 
-	public void setValorLucro(double valorLucro) {
-		this.valorLucro = valorLucro;
-	}
+    public void setValorLucro(double valorLucro) {
+        this.valorLucro = valorLucro;
+    }
 
-	public double getValorCusto() {
-		return valorCusto;
-	}
+    public double getValorCusto() {
+        return valorCusto;
+    }
 
-	public void setValorCusto(double valorCusto) {
-		this.valorCusto = valorCusto;
-	}
+    public void setValorCusto(double valorCusto) {
+        this.valorCusto = valorCusto;
+    }
 
-	public double getValorDesconto() {
-		return valorDesconto;
-	}
+    public double getValorDesconto() {
+        return valorDesconto;
+    }
 
-	public void setValorDesconto(double valorDesconto) {
-		this.valorDesconto = valorDesconto;
-	}
+    public void setValorDesconto(double valorDesconto) {
+        this.valorDesconto = valorDesconto;
+    }
 
-	public List<ItemVenda> getItensVendidos() {
-		return itensVendidos;
-	}
+    public List<ItemVenda> getItensVendidos() {
+        return itensVendidos;
+    }
 
-	// Methods
-	Scanner scanner = new Scanner(System.in);
+    // Methods
 
-	public void inputVenda() {
-		// Adicionar nome do cliente
-		System.out.print("\nDigite o nome do cliente: ");
-		this.cliente = scanner.nextLine();
+    public void inputVenda() {
+        JTextField clienteField = new JTextField();
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JLabel("Digite o nome do cliente:"), BorderLayout.NORTH);
+        panel.add(clienteField, BorderLayout.CENTER);
 
-		// Adicionar horário da venda
-		this.dataHora = LocalDateTime.now();
+        int option = JOptionPane.showConfirmDialog(null, panel, "Nova Venda - Cliente", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (option == JOptionPane.OK_OPTION) {
+            this.cliente = clienteField.getText();
+        } else {
+            JOptionPane.showMessageDialog(null, "Operação cancelada.");
+            return;
+        }
 
-		// While para adicionar produtos
-		while (true) {
-			System.out.println("\nAdicionar produto");
-			System.out.print("\nDigite o ID do item (0 para finalizar): ");
-			int itemID = scanner.nextInt();
-			scanner.nextLine(); // Consumir a quebra de linha
+        this.dataHora = LocalDateTime.now();
 
-			if (itemID == 0) {
-				break;
-			}
+        while (true) {
+            JTextField itemIDField = new JTextField();
+            JTextField quantidadeField = new JTextField();
+            Object[] message = {
+                "Digite o ID do item (0 para finalizar):", itemIDField,
+                "Digite a quantidade:", quantidadeField
+            };
 
-			// Consultar o item no banco de dados
-			ItemMenu item = consultarItemNoBanco(itemID);
+            int result = JOptionPane.showConfirmDialog(null, message, "Adicionar Produto", JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                int itemID;
+                int quantidade;
+                try {
+                    itemID = Integer.parseInt(itemIDField.getText());
+                    if (itemID == 0) {
+                        break;
+                    }
+                    quantidade = Integer.parseInt(quantidadeField.getText());
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "ID ou quantidade inválidos.");
+                    continue;
+                }
 
-			if (item != null) {
-				// Digitar a quantidade
-				System.out.print("\nDigite a quantidade que foi vendida do produto: ");
-				int quantidade = scanner.nextInt();
-				scanner.nextLine(); // Consumir a quebra de linha
+                ItemMenu item = consultarItemNoBanco(itemID);
 
-				recalcularEstoque(item, quantidade, 1); // Recalcula estoque e adiciona produto
-			} else {
-				System.out.println("Produto não encontrado no banco de dados.");
-			}
-		}
+                if (item != null) {
+                    recalcularEstoque(item, quantidade, 1);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Produto não encontrado no banco de dados.");
+                }
+            } else {
+                break;
+            }
+        }
 
-		// Calcula o valor total da venda, custo e lucro
-		for (ItemVenda item : itensVendidos) {
-			valorVenda += item.getSubtotal();
-			valorCusto += item.getQuantidade() * consultarPrecoCustoNoBanco(item.getItemMenu().getID());
-		}
-		valorLucro = valorVenda - valorCusto;
+        for (ItemVenda item : itensVendidos) {
+            valorVenda += item.getSubtotal();
+            valorCusto += item.getQuantidade() * consultarPrecoCustoNoBanco(item.getItemMenu().getID());
+        }
 
-		// Recalcular com descontos e printar o preço final
-		recalcularDesconto();
-	}
+        valorLucro = valorVenda - valorCusto;
 
-	// Consultar item no banco de dados pelo ID
-	private ItemCafe consultarItemNoBanco(int itemID) {
-		String sql = "SELECT * FROM ITEMMENU WHERE id = ?";
-		try (Connection conn = ConnectionDB.getDatabaseConnection();
-				PreparedStatement ps = conn.prepareStatement(sql)) {
+        int desconto = recalcularDesconto();
 
-			ps.setInt(1, itemID);
+        valorDesconto = valorVenda * (desconto * 0.01); // Valor do desconto
+        valorVenda = valorVenda - valorDesconto; // Valor da venda com o desconto
+        valorLucro = valorVenda - valorCusto - valorDesconto;
 
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					int id = rs.getInt("id");
-					int codigo = rs.getInt("codigo");
-					int tipo = rs.getInt("tipo");
-					String nome = rs.getString("nome");
-					double precoCusto = rs.getDouble("precoCusto");
-					double precoVenda = rs.getDouble("precoVenda");
-					boolean disponivel = rs.getBoolean("disponivel");
-					int quantidade = rs.getInt("quantidade");
-					String descricao = rs.getString("descricao");
+        JOptionPane.showMessageDialog(null,
+            String.format("Venda finalizada!\nValor total da venda: R$ %.2f\nValor total do custo: R$ %.2f\nValor total do lucro: R$ %.2f",
+                valorVenda, valorCusto, valorLucro));
+    }
 
-					return new ItemCafe(id, codigo, tipo, nome, precoCusto, precoVenda, quantidade, disponivel,
-							descricao);
-				}
-			}
+    // Consultar item no banco de dados pelo ID
+    private ItemCafe consultarItemNoBanco(int itemID) {
+        String sql = "SELECT * FROM ItemMenu WHERE ID = ?";
+        try (Connection conn = ConnectionDB.getDatabaseConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+            ps.setInt(1, itemID);
 
-	// Consultar preço de custo no banco de dados pelo ID do item
-	private double consultarPrecoCustoNoBanco(int itemID) {
-		String sql = "SELECT precoCusto FROM ITEMMENU WHERE id = ?";
-		try (Connection conn = ConnectionDB.getDatabaseConnection();
-				PreparedStatement ps = conn.prepareStatement(sql)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int id = rs.getInt("ID");
+                    int codigo = rs.getInt("codigo");
+                    int tipo = rs.getInt("tipo");
+                    String nome = rs.getString("nome");
+                    double precoCusto = rs.getDouble("precoCusto");
+                    double precoVenda = rs.getDouble("precoVenda");
+                    boolean disponivel = rs.getBoolean("disponivel");
+                    int quantidade = rs.getInt("quantidade");
+                    String descricao = rs.getString("descricao");
 
-			ps.setInt(1, itemID);
+                    return new ItemCafe(id, codigo, tipo, nome, precoCusto, precoVenda, quantidade, disponivel, descricao);
+                }
+            }
 
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return rs.getDouble("precoCusto");
-				}
-			}
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0.0; // Retorna 0.0 se não encontrar o preço de custo
-	}
+    // Consultar preço de custo no banco de dados pelo ID do item
+    private double consultarPrecoCustoNoBanco(int itemID) {
+        String sql = "SELECT precoCusto FROM ItemMenu WHERE ID = ?";
+        try (Connection conn = ConnectionDB.getDatabaseConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-	private void atualizarQuantidadeNoBanco(ItemMenu item) {
-		String sql = "UPDATE ITEMMENU SET quantidade = ? WHERE id = ?";
-		try (Connection conn = ConnectionDB.getDatabaseConnection();
-				PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, itemID);
 
-			ps.setInt(1, item.getQuantidade());
-			ps.setInt(2, item.getID());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("precoCusto");
+                }
+            }
 
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0.0; // Retorna 0.0 se não encontrar o preço de custo
+    }
 
-	public void recalcularEstoque(ItemMenu item, int quantidade, int option) {
-		if (option == 1) { // option = 1 é remover estoque
-			if (item == null) {
-				System.out.println("Item não encontrado.");
-			} else if (item.getQuantidade() < quantidade) {
-				System.out.println("Quantidade insuficiente em estoque.");
-			} else {
-				// Atualiza o estoque
-				item.setQuantidade(item.getQuantidade() - quantidade);
-				item.setDisponivel(item.getQuantidade() > 0);
+    private void atualizarQuantidadeNoBanco(ItemMenu item) {
+        String sql = "UPDATE ItemMenu SET quantidade = ?, disponivel = ? WHERE ID = ?";
+        try (Connection conn = ConnectionDB.getDatabaseConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-				// Atualiza o banco de dados
-				atualizarQuantidadeNoBanco(item);
+            ps.setInt(1, item.getQuantidade());
+            ps.setBoolean(2, item.isDisponivel());
+            ps.setInt(3, item.getID());
 
-				// Adição na lista do objeto itemVenda
-				ItemVenda itemVenda = new ItemVenda(item, quantidade);
-				if (itensVendidos == null) {
-					itensVendidos = new ArrayList<>();
-				}
-				itensVendidos.add(itemVenda);
-			}
-		} else if (option == 2) { // option = 2 é adicionar estoque
-			if (item == null) {
-				System.out.println("Item não encontrado.");
-			} else {
-				item.setQuantidade(item.getQuantidade() + quantidade);
-				if (!item.isDisponivel()) {
-					item.setDisponivel(true);
-				}
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
-				// Atualiza o banco de dados
-				atualizarQuantidadeNoBanco(item);
-			}
-		}
-	}
+    public void recalcularEstoque(ItemMenu item, int quantidade, int option) {
+        if (option == 1) { // option = 1 é remover estoque
+            if (item == null) {
+                JOptionPane.showMessageDialog(null, "Item não encontrado.");
+            } else if (item.getQuantidade() < quantidade) {
+                JOptionPane.showMessageDialog(null, "Quantidade insuficiente em estoque.");
+            } else {
+                item.setQuantidade(item.getQuantidade() - quantidade);
+                item.setDisponivel(item.getQuantidade() > 0);
 
-	public void recalcularDesconto() {
-		System.out.println("Valor total da venda: " + valorVenda);
-		System.out.print("\nDigite o valor da porcentagem de desconto [0-100](0 para não dar desconto): ");
-		int desconto = scanner.nextInt();
+                atualizarQuantidadeNoBanco(item);
 
-		if (desconto == 0) {
-			System.out.println("Não foi adicionado desconto");
-			System.out.println("Valor final é: " + valorVenda);
-		} else if (desconto > 0 && desconto <= 100) {
-			System.out.println("\nDesconto de " + desconto + "%");
-			valorDesconto = valorVenda * (desconto * 0.01); // Valor do desconto
-			valorVenda = valorVenda - valorDesconto; // Valor da venda com o desconto
-			valorLucro = valorVenda - valorCusto;
+                ItemVenda itemVenda = new ItemVenda(item, quantidade);
+                if (itensVendidos == null) {
+                    itensVendidos = new ArrayList<>();
+                }
+                itensVendidos.add(itemVenda);
+            }
+        } else if (option == 2) { // option = 2 é adicionar estoque
+            if (item == null) {
+                JOptionPane.showMessageDialog(null, "Item não encontrado.");
+            } else {
+                item.setQuantidade(item.getQuantidade() + quantidade);
+                if (!item.isDisponivel()) {
+                    item.setDisponivel(true);
+                }
 
-			System.out.println("Desconto sobre preço total de R$" + valorDesconto);
-		} else {
-			System.out.println("Não foi aplicado desconto. Digite um valor de desconto esperado");
-		}
+                atualizarQuantidadeNoBanco(item);
+            }
+        }
+    }
 
-		System.out.println("\n----- Venda finalizada! -----");
-		System.out.println("\nValor total da venda: " + valorVenda);
-		System.out.println("Valor total do custo: " + valorCusto);
-		System.out.println("Valor total do lucro: " + valorLucro);
-	}
+    public int recalcularDesconto() {
+        JTextField descontoField = new JTextField();
+        Object[] message = {
+            "Valor total da venda: R$ " + valorVenda,
+            "Valor total do custo: R$ " + valorCusto,
+            "Valor total do lucro: R$ " + valorLucro,
+            "\nDigite o valor da porcentagem de desconto [0-100](0 para não dar desconto):", descontoField
+        };
 
-	public void exibirDetalhes() {
-		System.out.println("\n----- Venda ID: " + vendaID + " -----");
-		System.out.println("\nCliente: " + cliente);
-		System.out.println("Horário: " + dataHora);
+        int option = JOptionPane.showConfirmDialog(null, message, "Aplicar Desconto", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                int desconto = Integer.parseInt(descontoField.getText());
+                if (desconto < 0 || desconto > 100) {
+                    JOptionPane.showMessageDialog(null, "Por favor, insira um valor válido para o desconto.");
+                    return recalcularDesconto(); // Chamar novamente até inserir um valor válido
+                }
+                return desconto;
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Por favor, insira um valor numérico.");
+                return recalcularDesconto(); // Chamar novamente até inserir um valor válido
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "Operação cancelada.");
+            return 0;
+        }
+    }
 
-		System.out.println("\nProdutos vendidos");
-		for (ItemVenda item : itensVendidos) {
-			System.out.println("Produto: " + item.getItemMenu().getNome() + ", Quantidade: " + item.getQuantidade()
-					+ ", Preço total: " + item.getSubtotal());
-		}
+    public void exibirDetalhes() {
+        StringBuilder detalhes = new StringBuilder();
+        detalhes.append("Venda ID: ").append(vendaID).append("\n");
+        detalhes.append("Cliente: ").append(cliente).append("\n");
+        detalhes.append("Horário: ").append(dataHora).append("\n\n");
 
-		System.out.println("\nValor de Venda: " + valorVenda);
-		System.out.println("Valor de Custo: " + valorCusto);
-		System.out.println("Valor do desconto: " + valorDesconto);
-		System.out.println("Lucro: " + valorLucro);
-	}
+        detalhes.append("Produtos vendidos:\n");
+        for (ItemVenda item : itensVendidos) {
+            detalhes.append("Produto: ").append(item.getItemMenu().getNome())
+                    .append(", Quantidade: ").append(item.getQuantidade())
+                    .append(", Preço total: ").append(item.getSubtotal()).append("\n");
+        }
+
+        detalhes.append("\nValor de Venda: ").append(valorVenda).append("\n");
+        detalhes.append("Valor de Custo: ").append(valorCusto).append("\n");
+        detalhes.append("Valor do Desconto: ").append(valorDesconto).append("\n");
+        detalhes.append("Lucro: ").append(valorLucro).append("\n");
+
+        JOptionPane.showMessageDialog(null, detalhes.toString(), "Detalhes da Venda", JOptionPane.INFORMATION_MESSAGE);
+    }
 }
