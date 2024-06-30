@@ -71,15 +71,13 @@ Esta classe gerencia a interface gráfica do usuário (GUI).
 
 - **Métodos:**
   - `InterfaceUsuario()`: Construtor que configura a GUI, menus e ações dos botões.
+  - `atualizarRelatorios()`: Atualiza os dados do relatório das vendas.
 
 ### Classe `ItemCafe`
 Esta classe representa um item de café no menu. Foi criada para uma possível escalabilidade do projeto para outras frentes de atuação do código.
 
 - **Atributos:**
-  - `id`, `codigo`, `tipo`, `nome`, `precoCusto`, `precoVenda`, `disponivel`, `quantidade`, `descricao`: Informações sobre o item.
-
-- **Métodos:**
-  - Construtores, getters e setters.
+  - tipoCafe
 
 ### Classe `ItemMenu`
 Classe base para os itens do menu.
