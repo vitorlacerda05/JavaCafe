@@ -1,138 +1,115 @@
 package main;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Scanner;
 
-public class InterfaceUsuario extends JFrame {
-    private GerenciadorProdutos gerenciadorProdutos;
-    private GerenciadorVendas gerenciadorVendas;
-    private JPanel mainPanel;
+public class InterfaceUsuario {
 
-    public InterfaceUsuario() {
-        gerenciadorProdutos = new GerenciadorProdutos();
-        gerenciadorVendas = new GerenciadorVendas(GerenciadorProdutos.returnItens());
+    static boolean stop = false;
+    static int resposta = 0;
 
-        setTitle("Sistema de Gerenciamento de Cafeteria");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+    public static void main(String[] args) {
 
-        JPanel panel = new JPanel(new BorderLayout());
-        mainPanel = new JPanel(new CardLayout());
+        Scanner scanner = new Scanner(System.in);
+        GerenciadorProdutos gerenciador = new GerenciadorProdutos();
+        GerenciadorVendas gerenciadorVendas = new GerenciadorVendas(gerenciador.returnItens());
 
+        System.out.println("----- Bem vindo ao Java Café -----");
 
-        // Adicionando as opções ao menu
-        JMenuBar menuBar = new JMenuBar();
+        while (!stop) {
+            System.out.println("\nO que deseja fazer?");
+            System.out.println("1. Gerenciar produtos");
+            System.out.println("2. Gerenciar vendas");
+            System.out.println("3. Sair do Java Café");
+            System.out.print("\nDigite sua resposta: ");
+            resposta = scanner.nextInt();
 
-        JMenu menuProduto = new JMenu("Produtos");
-        JMenuItem addProduto = new JMenuItem("Adicionar Produto");
-        JMenuItem editProduto = new JMenuItem("Editar Produto");
-        JMenuItem excludeProduto = new JMenuItem("Excluir Produto");
-        JMenuItem searchProduto = new JMenuItem("Buscar Produto");
-        JMenuItem listProduto = new JMenuItem("Listar produtos");
-        
-        menuProduto.add(addProduto);
-        menuProduto.add(editProduto);
-        menuProduto.add(excludeProduto);
-        menuProduto.add(searchProduto);
-        menuProduto.add(listProduto);
-
-        JMenu menuVenda = new JMenu("Vendas");
-        JMenuItem addVenda = new JMenuItem("Adicionar Venda");
-        JMenuItem excludeVenda = new JMenuItem("Excluir Venda");
-        JMenuItem reportVenda = new JMenuItem("Relatório das Vendas");
-        JMenuItem searchVenda = new JMenuItem("Buscar Venda");
-        JMenuItem listVenda = new JMenuItem("Listar Vendas");
-        
-        
-        menuVenda.add(addVenda);
-        menuVenda.add(excludeVenda);
-        menuVenda.add(reportVenda);
-        menuVenda.add(searchVenda);
-        menuVenda.add(listVenda);
-
-        menuBar.add(menuProduto);
-        menuBar.add(menuVenda);
-
-        setJMenuBar(menuBar);
-
-        // Adicionando ação para as opções de Gerenciamento de produtos
-        
-        addProduto.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gerenciadorProdutos.createItem();
+            switch (resposta) {
+                case 1:
+                    gerenciarProdutos(scanner, gerenciador);
+                    break;
+                case 2:
+                    gerenciarVendas(scanner, gerenciadorVendas);
+                    break;
+                case 3:
+                    System.out.print("\nVocê saiu do Java Café!");
+                    stop = true;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Resposta inválida, digite a opção entre o intervalo dado");
             }
-        });
-        
-        editProduto.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gerenciadorProdutos.editItem();
-            }
-        });
+        }
+        scanner.close();
+    }
 
-        listProduto.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gerenciadorProdutos.listarItens();
-            }
-        });
-        
-        excludeProduto.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gerenciadorProdutos.excludeItem();
-            }
-        });
-        
-        searchProduto.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gerenciadorProdutos.buscarItemPorID();
-            }
-        });
+    private static void gerenciarProdutos(Scanner scanner, GerenciadorProdutos gerenciador) {
+        System.out.println("\n----- Gerenciando produtos -----");
+        System.out.println("\nO que deseja fazer?");
+        System.out.println("1. Criar produto");
+        System.out.println("2. Editar produto");
+        System.out.println("3. Excluir produto");
+        System.out.println("4. Buscar produto por ID");
+        System.out.println("5. Listar todos os produtos");
+        System.out.println("6. Voltar ao menu principal");
+        System.out.print("\nDigite sua resposta: ");
+        resposta = scanner.nextInt();
 
-        // Adicionando ação para as opções de Gerenciamento de vendas
-        
-        addVenda.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        switch (resposta) {
+            case 1:
+                gerenciador.createItem();
+                break;
+            case 2:
+                gerenciador.editItem();
+                break;
+            case 3:
+                gerenciador.excludeItem();
+                break;
+            case 4:
+                gerenciador.buscarItemPorID();
+                break;
+            case 5:
+                gerenciador.listarItens();
+                break;
+            case 6:
+                System.out.print("\nVoltando ao menu principal...\n");
+                return;
+            default:
+                throw new IllegalArgumentException("Resposta inválida, digite a opção entre o intervalo dado");
+        }
+    }
+
+    private static void gerenciarVendas(Scanner scanner, GerenciadorVendas gerenciadorVendas) {
+        System.out.println("\n----- Gerenciando vendas -----");
+        System.out.println("\nO que deseja fazer?");
+        System.out.println("1. Adicionar nova venda");
+        System.out.println("2. Excluir venda");
+        System.out.println("3. Listar todas as vendas");
+        System.out.println("4. Buscar venda por ID");
+        System.out.println("5. Relatório das vendas");
+        System.out.println("6. Voltar ao menu principal");
+        System.out.print("\nDigite sua resposta: ");
+        resposta = scanner.nextInt();
+
+        switch (resposta) {
+            case 1:
                 gerenciadorVendas.novaVenda();
-            }
-        });
-
-        listVenda.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gerenciadorVendas.listarVendas();
-            }
-        });
-        
-        excludeVenda.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+                break;
+            case 2:
                 gerenciadorVendas.excluirVenda();
-            }
-        });
-        
-        searchVenda.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+                break;
+            case 3:
+                gerenciadorVendas.listarVendas();
+                break;
+            case 4:
                 gerenciadorVendas.buscarVendaPorID();
-            }
-        });
-        
-        reportVenda.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+                break;
+            case 5:
                 gerenciadorVendas.relatorioVendas();
-            }
-        });
-
-        panel.add(mainPanel, BorderLayout.CENTER);
-        add(panel);
+                break;
+            case 6:
+                System.out.print("\nVoltando ao menu principal...\n");
+                return;
+            default:
+                throw new IllegalArgumentException("Resposta inválida, digite a opção entre o intervalo dado");
+        }
     }
 }

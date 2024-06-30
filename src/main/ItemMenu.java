@@ -6,7 +6,7 @@ public abstract class ItemMenu{
 	
 	// States
 
-	private int id;
+	private int ID;
 	private int codigo;
 	private int tipo;
 	private String nome; 
@@ -14,10 +14,9 @@ public abstract class ItemMenu{
 	private double precoVenda;
 	private boolean disponivel;
 	private int quantidade;
-	private String descricao;
 	
-	public ItemMenu(int id, int codigo, int tipo, String nome, double precoCusto, double precoVenda, int quantidade, boolean disponivel, String descricao) { // Set dos parâmetros passados
-		setID(id);
+	public ItemMenu(int ID, int codigo, int tipo, String nome, double precoCusto, double precoVenda, int quantidade, boolean disponivel) { // Set dos parâmetros passados
+		setID(ID);
 		setCodigo(codigo);
 		setTipo(tipo);
 		setNome(nome);
@@ -25,17 +24,16 @@ public abstract class ItemMenu{
 		setPrecoVenda(precoVenda);
 		setQuantidade(quantidade);
 		setDisponivel(disponivel);
-		setDescricao(descricao);
 	}
 	
 	// Getter and setter
 	
 	public int getID() {
-		return id;
+		return ID;
 	}
 
-	public void setID(int id) {
-		this.id = id;
+	public void setID(int iD) {
+		ID = iD;
 	}
 	
 	public int getCodigo() {
@@ -93,14 +91,6 @@ public abstract class ItemMenu{
 
 	public void setQuantidade(int quantidade) {
 		this.quantidade = quantidade;
-	}
-	
-	public String getDescricao() {
-		return descricao;
-	}
-	
-	public void setDescricao(String descricao) {
-		this.descricao = descricao;
 	}
 	
 	public void exibirDetalhes(Map<Integer, ItemMenu> itens, int tempID) {

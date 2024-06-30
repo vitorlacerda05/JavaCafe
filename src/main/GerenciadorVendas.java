@@ -1,20 +1,16 @@
 package main;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import connection.ConnectionDB;
-
 public class GerenciadorVendas {
-
+	private int IDVenda = 1;
 	private double valorHistoricoVenda;
 	private double valorHistoricoCusto;
 	private double valorHistoricoLucro;
 
+	private Map<Integer, Vendas> historicoVendas = new HashMap<>(); // Hash com todas as vendas realizadas
 	private Map<Integer, ItemMenu> itens; // Referência ao mapa de itens
 
 	public double getValorHistoricoVenda() {
@@ -37,239 +33,92 @@ public class GerenciadorVendas {
 		this.itens = itens;
 	}
 
-	// Método para adicionar venda no banco de dados
+	// Método para adicionar venda no Hash
 
 	public void novaVenda() {
-		Vendas novaVenda = new Vendas(itens);
-		novaVenda.inputVenda();
 
-		// Atualizar históricos
+		Vendas novaVenda = new Vendas(IDVenda, itens);
+		novaVenda.inputVenda();
+		
+		historicoVendas.put(IDVenda, novaVenda);
+		
 		valorHistoricoCusto += novaVenda.getValorCusto();
 		valorHistoricoVenda += novaVenda.getValorVenda();
 		valorHistoricoLucro += novaVenda.getValorLucro();
-
-		// Inserir a nova venda no banco de dados
-		try {
-			inserirVendaNoBanco(novaVenda);
-		} catch (SQLException e) {
-			System.err.println("Erro ao inserir nova venda: " + e.getMessage());
-		}
-	}
-
-	private void inserirVendaNoBanco(Vendas novaVenda) throws SQLException {
-	    String vendaSql = "INSERT INTO vendas (dataHora, cliente, valorVenda, valorCusto, valorLucro, valorDesconto) VALUES (?, ?, ?, ?, ?, ?)";
-	    String itensVendaSql = "INSERT INTO itens_venda (vendaID, itemID, quantidade, subtotal) VALUES (?, ?, ?, ?)";
-
-	    Connection connection = null;
-	    PreparedStatement vendaPs = null;
-	    PreparedStatement itensVendaPs = null;
-	    ResultSet generatedKeys = null;
-
-	    try {
-	        connection = ConnectionDB.getDatabaseConnection();
-	        connection.setAutoCommit(false); // Iniciar transação
-
-	        // Inserir a venda
-	        vendaPs = connection.prepareStatement(vendaSql, PreparedStatement.RETURN_GENERATED_KEYS);
-	        vendaPs.setObject(1, novaVenda.getDataHora());
-	        vendaPs.setString(2, novaVenda.getCliente());
-	        vendaPs.setDouble(3, novaVenda.getValorVenda());
-	        vendaPs.setDouble(4, novaVenda.getValorCusto());
-	        vendaPs.setDouble(5, novaVenda.getValorLucro());
-	        vendaPs.setDouble(6, novaVenda.getValorDesconto());
-	        vendaPs.executeUpdate();
-
-	        // Obter o ID da venda gerada
-	        generatedKeys = vendaPs.getGeneratedKeys();
-	        if (generatedKeys.next()) {
-	            novaVenda.setVendaID(generatedKeys.getInt(1));
-	        } else {
-	            connection.rollback(); // Reverter transação
-	            throw new SQLException("Falha ao obter o ID da venda.");
-	        }
-
-	        // Inserir os itens vendidos
-	        itensVendaPs = connection.prepareStatement(itensVendaSql);
-	        for (ItemVenda itemVenda : novaVenda.getItensVendidos()) {
-	            int itemID = buscarIDProduto(itemVenda.getItemMenu().getID()); // Busca o ID do produto no banco
-	            itensVendaPs.setInt(1, novaVenda.getVendaID());
-	            itensVendaPs.setInt(2, itemID);
-	            itensVendaPs.setInt(3, itemVenda.getQuantidade());
-	            itensVendaPs.setDouble(4, itemVenda.getSubtotal());
-	            itensVendaPs.addBatch();
-	        }
-	        itensVendaPs.executeBatch();
-
-	        connection.commit(); // Confirmar transação
-
-	    } catch (SQLException e) {
-	        if (connection != null) {
-	            connection.rollback(); // Reverter transação em caso de erro
-	        }
-	        throw new SQLException("Erro ao inserir venda no banco: " + e.getMessage());
-	    } finally {
-	        if (generatedKeys != null) {
-	            try {
-	                generatedKeys.close();
-	            } catch (SQLException e) {
-	                e.printStackTrace();
-	            }
-	        }
-	        if (vendaPs != null) {
-	            try {
-	                vendaPs.close();
-	            } catch (SQLException e) {
-	                e.printStackTrace();
-	            }
-	        }
-	        if (itensVendaPs != null) {
-	            try {
-	                itensVendaPs.close();
-	            } catch (SQLException e) {
-	                e.printStackTrace();
-	            }
-	        }
-	        if (connection != null) {
-	            try {
-	                connection.setAutoCommit(true); // Restaurar modo de confirmação automática
-	                connection.close();
-	            } catch (SQLException e) {
-	                e.printStackTrace();
-	            }
-	        }
-	    }
-	}
-
-	private int buscarIDProduto(int id) throws SQLException {
-	    String sql = "SELECT id FROM ITEMMENU WHERE id = ?";
-	    try (Connection connection = ConnectionDB.getDatabaseConnection();
-	         PreparedStatement ps = connection.prepareStatement(sql)) {
-
-	        ps.setInt(1, id);
-
-	        try (ResultSet rs = ps.executeQuery()) {
-	            if (rs.next()) {
-	                return rs.getInt("id");
-	            } else {
-	                throw new SQLException("Produto não encontrado no banco de dados: " + id);
-	            }
-	        }
-
-	    } catch (SQLException e) {
-	        throw new SQLException("Erro ao buscar ID do produto: " + e.getMessage());
-	    }
+		IDVenda++;
 	}
 
 	// Método para excluir venda
 
 	public void excluirVenda() {
-	    System.out.println("\n----- Excluir venda -----");
-	    System.out.print("\nDigite o ID da venda para excluir: ");
-	    int tempID = scanner.nextInt();
+		System.out.println("\n----- Excluir venda -----");
+		System.out.print("\nDigite o ID da venda para excluir: ");
+		int tempID = scanner.nextInt();
 
-	    try (Connection connection = ConnectionDB.getDatabaseConnection();
-	         PreparedStatement vendaPs = connection.prepareStatement("DELETE FROM vendas WHERE vendaID = ?");
-	         PreparedStatement itensVendaPs = connection.prepareStatement("DELETE FROM itens_venda WHERE vendaID = ?")) {
+		if (historicoVendas.containsKey(tempID)) {
+			Vendas venda = historicoVendas.get(tempID);
 
-	        vendaPs.setInt(1, tempID);
-	        itensVendaPs.setInt(1, tempID);
+			// Recalcular a quantidade de estoque de produto
 
-	        // Remover os itens da venda
-	        itensVendaPs.executeUpdate();
-	        // Remover a venda
-	        vendaPs.executeUpdate();
+			for (int i = 0; i < venda.getItensVendidos().size(); i++) {
+				ItemVenda item = venda.getItensVendidos().get(i);
+				int quantidade = item.getQuantidade();
 
-	        System.out.println("\nVenda de ID = " + tempID + " foi excluída!");
+				Vendas.recalcularEstoque(item.getItemMenu(), quantidade, 2);
+			}
 
-	    } catch (SQLException e) {
-	        System.err.println("Erro ao excluir venda: " + e.getMessage());
-	    }
+			historicoVendas.remove(tempID); // Remover venda
+			
+			System.out.println("\nVenda de ID = " + tempID + " foi excluida! Os produtos tiveram seus estoques realocados");
+			
+			return;
+		} else {
+			throw new IllegalArgumentException("Venda não encontrada com o ID: " + tempID);
+		}
 	}
 
-
-	// Método para listar vendas
+	// Método para listar venda
 
 	public void listarVendas() {
-	    System.out.println("\nListagem das vendas: ");
+		System.out.println("\nListagem das vendas: ");
 
-	    String sql = "SELECT * FROM vendas";
+		if (historicoVendas.size() == 0) { // Verificação caso não possui produtos registrados
+			System.out.println("\nNão possui vendas registradas");
+		} else {
+			for (int i = 1; i <= IDVenda; i++) {
 
-	    try (Connection connection = ConnectionDB.getDatabaseConnection();
-	         PreparedStatement ps = connection.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
+				if (historicoVendas.get(i) != null) {
+					(historicoVendas.get(i)).exibirDetalhes();
+					System.out.print("-----------------\n");
 
-	        while (rs.next()) {
-	            System.out.println("ID: " + rs.getInt("vendaID"));
-	            System.out.println("Data/Hora: " + rs.getObject("dataHora"));
-	            System.out.println("Cliente: " + rs.getString("cliente"));
-	            System.out.println("Valor da Venda: " + rs.getDouble("valorVenda"));
-	            System.out.println("Valor de Custo: " + rs.getDouble("valorCusto"));
-	            System.out.println("Valor do Lucro: " + rs.getDouble("valorLucro"));
-	            System.out.println("Valor do Desconto: " + rs.getDouble("valorDesconto"));
-	            System.out.println("-----------------\n");
-	        }
-
-	    } catch (SQLException e) {
-	        System.err.println("Erro ao listar vendas: " + e.getMessage());
-	    }
+				}
+			}
+		}
 	}
 
-	// Método para buscar venda por ID
+	// Método para buscar venda
 
 	public void buscarVendaPorID() {
-	    System.out.print("\nDigite o ID da venda para buscar: ");
-	    int tempID = scanner.nextInt();
-	    scanner.nextLine();
+		System.out.print("\nDigite o ID da venda para buscar: ");
+		int tempID = scanner.nextInt();
+		scanner.nextLine();
 
-	    String sql = "SELECT * FROM vendas WHERE vendaID = ?";
+		if (historicoVendas.containsKey(tempID)) {
 
-	    try (Connection connection = ConnectionDB.getDatabaseConnection();
-	         PreparedStatement ps = connection.prepareStatement(sql)) {
+			if (historicoVendas.get(tempID) != null) {
+				(historicoVendas.get(tempID)).exibirDetalhes();
+				System.out.print("-----------------\n");
+			}
 
-	        ps.setInt(1, tempID);
-
-	        try (ResultSet rs = ps.executeQuery()) {
-	            if (rs.next()) {
-	                System.out.println("ID: " + rs.getInt("vendaID"));
-	                System.out.println("Data/Hora: " + rs.getObject("dataHora"));
-	                System.out.println("Cliente: " + rs.getString("cliente"));
-	                System.out.println("Valor da Venda: " + rs.getDouble("valorVenda"));
-	                System.out.println("Valor de Custo: " + rs.getDouble("valorCusto"));
-	                System.out.println("Valor do Lucro: " + rs.getDouble("valorLucro"));
-	                System.out.println("Valor do Desconto: " + rs.getDouble("valorDesconto"));
-	                System.out.println("-----------------\n");
-	            } else {
-	                throw new IllegalArgumentException("Venda não encontrada com o ID: " + tempID);
-	            }
-	        }
-
-	    } catch (SQLException e) {
-	        System.err.println("Erro ao buscar venda por ID: " + e.getMessage());
-	    }
+		} else {
+			throw new IllegalArgumentException("Venda não encontrada com o ID: " + tempID);
+		}
 	}
-
-	// Método para gerar relatório de vendas
-
+	
 	public void relatorioVendas() {
-	    String sql = "SELECT SUM(valorVenda) AS totalVenda, SUM(valorCusto) AS totalCusto, SUM(valorLucro) AS totalLucro FROM vendas";
-
-	    try (Connection connection = ConnectionDB.getDatabaseConnection();
-	         PreparedStatement ps = connection.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
-
-	        if (rs.next()) {
-	            valorHistoricoVenda = rs.getDouble("totalVenda");
-	            valorHistoricoCusto = rs.getDouble("totalCusto");
-	            valorHistoricoLucro = rs.getDouble("totalLucro");
-	        }
-
-	        System.out.println("\nRelatório de todas as vendas:");
-	        System.out.println("Valor bruto total vendido: R$ " + getValorHistoricoVenda());
-	        System.out.println("Valor de custo total: R$ " + getValorHistoricoCusto());
-	        System.out.println("Valor de lucro total: R$ " + getValorHistoricoLucro());
-
-	    } catch (SQLException e) {
-	        System.err.println("Erro ao gerar relatório de vendas: " + e.getMessage());
-	    }
+		System.out.println("\nRelatório de todas as vendas:");
+		System.out.println("Valor bruto total vendido: R$ " + getValorHistoricoVenda());
+		System.out.println("Valor de custo total: R$ " + getValorHistoricoCusto());
+		System.out.println("Valor de lucro total: R$ " + getValorHistoricoLucro());
 	}
 }
