@@ -91,8 +91,7 @@ public class Vendas {
 		return itensVendidos;
 	}
 
-	// Methods
-
+	// Método para realizar o input dos valores das vendas
 	public void inputVenda() {
 		// Adicionar nome do cliente
 		this.cliente = JOptionPane.showInputDialog("Digite o nome do cliente:");
@@ -156,6 +155,7 @@ public class Vendas {
 		}
 	}
 
+	// Consulta um item no banco de dados pelo seu ID
 	private ItemMenu consultarItemNoBanco(int itemID) {
 		String sql = "SELECT * FROM ITEMMENU WHERE id = ?";
 		try (Connection conn = ConnectionDB.getDatabaseConnection();
@@ -185,7 +185,8 @@ public class Vendas {
 		}
 		return null;
 	}
-
+	
+	//Atualiza a quantidade disponível de um item no banco de dados
 	private void atualizarQuantidadeNoBanco(ItemMenu item) {
 		String sql = "UPDATE ITEMMENU SET quantidade = ?, disponivel = ? WHERE id = ?";
 		try (Connection conn = ConnectionDB.getDatabaseConnection();
@@ -201,6 +202,7 @@ public class Vendas {
 		}
 	}
 
+	// Método para recalcular o estoque
 	public void recalcularEstoque(ItemMenu item, int quantidade, int option) {
 		if (option == 1) { // option = 1 é remover estoque
 			if (item == null) {
@@ -233,6 +235,7 @@ public class Vendas {
 		}
 	}
 
+	// Método para recalcular o desconto da venda
 	public int recalcularDesconto() {
 		JTextField descontoField = new JTextField();
 		Object[] message = { "Valor total da venda: R$ " + valorVenda, "Valor total do custo: R$ " + valorCusto,
@@ -258,6 +261,7 @@ public class Vendas {
 		}
 	}
 
+	// Método para exibir detalhes da venda
 	public void exibirDetalhes() {
 		StringBuilder detalhes = new StringBuilder();
 		detalhes.append("Venda ID: ").append(vendaID).append("\n");

@@ -40,7 +40,7 @@ Esta classe gerencia as operações relacionadas aos produtos da cafeteria.
 - **Métodos:**
   - `createItem()`: Cria um novo produto e o adiciona ao banco de dados.
   - `editItem()`: Edita um produto existente no banco de dados.
-  - `excludeItem()`: Exclui um produto do banco de dados.
+  - `excludeItem()`: Exclui um produto do banco de dados. Não é possível excluir produtos que foram relacionados com alguma venda!
   - `buscarItemPorID()`: Busca um produto pelo ID e exibe suas informações.
   - `listarItens()`: Lista todos os produtos do banco de dados.
 
@@ -167,10 +167,10 @@ Classe principal que inicializa a aplicação.
        vendaID INT AUTO_INCREMENT PRIMARY KEY,
        dataHora DATETIME NOT NULL,
        cliente VARCHAR(255) NOT NULL,
-       valorVenda DOUBLE NOT NULL,
-       valorCusto DOUBLE NOT NULL,
+       valorVenda DOUBLE(10, 2) NOT NULL,
+       valorCusto DOUBLE(10, 2) NOT NULL,
        valorLucro DOUBLE(10,2) NOT NULL,
-       valorDesconto DOUBLE NOT NULL
+       valorDesconto DOUBLE(10, 2) NOT NULL
    );
 
    -- Criar a tabela de itens da venda
@@ -253,6 +253,12 @@ Classe principal que inicializa a aplicação.
    - O sistema solicita o ID da venda a ser excluída.
    - O usuário insere o ID e confirma.
    - O sistema verifica se a venda existe. Se não existir, exibe uma mensagem de erro. Caso contrário, exclui a venda do banco de dados, ajusta as quantidades dos produtos vendidos e exibe uma mensagem de sucesso.
+
+## Possíveis dúvidas
+
+- Não é possível excluir produtos que foram relacionados com alguma venda!
+- Os `Tipos` utilizam números inteiros não são definidos no código. O usuário tem uma liberdade para definir os seus próprios tipos de produto conforme a sua necessidade. 
+- A quantidade de itens em estoque é modificada conforme vende ou exclui uma determinada venda.
 
 ## Comentários Finais
 Este projeto foi desenvolvido com o objetivo de fornecer uma solução prática para o gerenciamento de uma cafeteria, utilizando conceitos de Programação Orientada a Objetos e integração com banco de dados. A documentação detalhada visa facilitar a compreensão e manutenção do sistema, além de fornecer um guia completo para a configuração e execução do projeto.

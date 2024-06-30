@@ -9,14 +9,16 @@ import connection.ConnectionDB;
 
 public class ItemCafe extends ItemMenu {
 
+	// Construtor
 	public ItemCafe(int id, int codigo, int tipo, String nome, double precoCusto, double precoVenda, int quantidade,
 			boolean disponivel, String descricao) {
 		super(id, codigo, tipo, nome, precoCusto, precoVenda, quantidade, disponivel, descricao);
 
 	}
-
+	// Descrição é da classe ItemCafe para uma possível escalabilidade do projeto no futuro, alocando outras áreas
 	private String descricao;
-
+	
+	// Getters and Setters
 	public String getDescricao() {
 		return descricao;
 	}
@@ -25,6 +27,7 @@ public class ItemCafe extends ItemMenu {
 		this.descricao = descricao;
 	}
 
+	// Método para exibir os detalhes do item vendido
 	public void exibirDetalhes(Map<Integer, ItemMenu> itens, int tempID) {
 	    String selectSql = "SELECT * FROM ITEMMENU WHERE ID = ?";
 	    try (PreparedStatement selectPs = ConnectionDB.getDatabaseConnection().prepareStatement(selectSql)) {

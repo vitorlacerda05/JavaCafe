@@ -36,7 +36,6 @@ public class GerenciadorVendas {
 	}
 
 	// Método para adicionar venda no banco de dados
-
 	public void novaVenda() {
 	    Vendas novaVenda = new Vendas(itens);
 	    novaVenda.inputVenda();
@@ -97,7 +96,7 @@ public class GerenciadorVendas {
 	    }
 	}
 
-
+	// Método para inserir a venda no banco, chamado no método novaVenda()
 	private void inserirVendaNoBanco(Vendas novaVenda) throws SQLException {
 		String vendaSql = "INSERT INTO vendas (dataHora, cliente, valorVenda, valorCusto, valorLucro, valorDesconto) VALUES (?, ?, ?, ?, ?, ?)";
 		String itensVendaSql = "INSERT INTO itens_venda (vendaID, itemID, quantidade, subtotal) VALUES (?, ?, ?, ?)";
@@ -182,6 +181,7 @@ public class GerenciadorVendas {
 		}
 	}
 
+	// Método para buscar o produto por seu ID no banco de dados, usado durante a adição de uma nova venda
 	private int buscarIDProduto(int id) throws SQLException {
 		String sql = "SELECT ID FROM ItemMenu WHERE ID = ?";
 		try (Connection connection = ConnectionDB.getDatabaseConnection();
@@ -203,7 +203,6 @@ public class GerenciadorVendas {
 	}
 
 	// Método para excluir venda
-
 	public void excluirVenda() {
 
 		String idStr = JOptionPane.showInputDialog("Digite o ID da venda para excluir:");
@@ -275,7 +274,6 @@ public class GerenciadorVendas {
 	}
 
 	// Método para listar vendas
-
 	public void listarVendas() {
 		JFrame frame = new JFrame("Lista de Vendas");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -326,6 +324,7 @@ public class GerenciadorVendas {
 		frame.setVisible(true);
 	}
 
+	// Realiza a busca do produto por seu nome
 	private String buscarNomeProduto(int itemID) throws SQLException {
 		String sql = "SELECT nome FROM ItemMenu WHERE ID = ?";
 		try (Connection connection = ConnectionDB.getDatabaseConnection();
@@ -347,7 +346,6 @@ public class GerenciadorVendas {
 	}
 
 	// Método para buscar venda por ID
-
 	public void buscarVendaPorID() {
 		String idStr = JOptionPane.showInputDialog("Digite o ID da venda para buscar:");
 		if (idStr == null || idStr.isEmpty()) {
@@ -408,7 +406,6 @@ public class GerenciadorVendas {
 	}
 
 	// Método para gerar relatório de vendas
-
 	public void relatorioVendas() {
 		String sql = "SELECT SUM(valorVenda) AS totalVenda, SUM(valorCusto) AS totalCusto, SUM(valorLucro) AS totalLucro FROM vendas";
 

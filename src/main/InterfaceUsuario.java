@@ -212,6 +212,7 @@ public class InterfaceUsuario extends JFrame {
 		atualizarRelatorios();
 	}
 
+	// Método para atualizar os dados do painél principal
 	private void atualizarRelatorios() {
 		double valorHistoricoVenda = 0.0;
 		double valorHistoricoLucro = 0.0;

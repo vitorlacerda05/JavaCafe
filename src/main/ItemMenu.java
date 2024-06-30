@@ -5,7 +5,6 @@ import java.util.Map;
 public abstract class ItemMenu{
 	
 	// States
-
 	private int id;
 	private int codigo;
 	private int tipo;
@@ -29,7 +28,6 @@ public abstract class ItemMenu{
 	}
 	
 	// Getter and setter
-	
 	public int getID() {
 		return id;
 	}
