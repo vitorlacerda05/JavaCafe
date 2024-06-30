@@ -1,10 +1,10 @@
 # Projeto: Sistema de Gerenciamento de Cafeteria
 
-### Autores
+**Autores**
 
-Nome do aluno: Vitor Antonio de Almeida Lacerda. N°USP: 12544761
-Nome do aluno: Bruno Garcia de Oliveira Breda. N°USP: 11212702
-Nome do aluno: Felipe Oliveira Carvalho. N°USP: 14613879
+- Nome do aluno: Vitor Antonio de Almeida Lacerda. N°USP: 12544761
+- Nome do aluno: Bruno Garcia de Oliveira Breda. N°USP: 11212702
+- Nome do aluno: Felipe Oliveira Carvalho. N°USP: 14613879
 
 ## Descrição do Projeto
 
@@ -128,7 +128,7 @@ Classe principal que inicializa a aplicação.
 ## Diagramas
 
 ### Diagrama de Classes
-![Diagrama de Classes](link_para_o_diagrama_de_classes.png)
+![Diagrama de Classes](
 
 ## Procedimentos de Construção
 
@@ -233,9 +233,7 @@ Classe principal que inicializa a aplicação.
 
 ### Excluir Produto
 1. **Descrição:**
-   -
-
- O usuário seleciona "Excluir Produto" no menu.
+   - O usuário seleciona "Excluir Produto" no menu.
    - O sistema solicita o ID do produto a ser excluído.
    - O usuário insere o ID e confirma.
    - O sistema verifica se o produto está relacionado a alguma venda. Se estiver, exibe uma mensagem de erro. Caso contrário, exclui o produto do banco de dados e exibe uma mensagem de sucesso.
