@@ -162,59 +162,71 @@ public class GerenciadorVendas {
     // Método para excluir venda
 
     public void excluirVenda() {
+
         String idStr = JOptionPane.showInputDialog("Digite o ID da venda para excluir:");
-        if (idStr == null || idStr.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "ID não pode estar vazio.");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "ID da venda não pode estar vazio.");
             return;
         }
+        
         int tempID;
         try {
-            tempID = Integer.parseInt(idStr);
+            tempID = Integer.parseInt(idStr.trim());
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(null, "ID inválido.");
+            JOptionPane.showMessageDialog(null, "ID da venda inválido. Por favor, insira um número válido.");
             return;
         }
 
-        // Verificar se o ID existe
-        String checkSql = "SELECT COUNT(*) FROM vendas WHERE vendaID = ?";
-        try (Connection connection = ConnectionDB.getDatabaseConnection();
-             PreparedStatement checkPs = connection.prepareStatement(checkSql)) {
-            checkPs.setInt(1, tempID);
-            try (ResultSet rs = checkPs.executeQuery()) {
-                if (rs.next() && rs.getInt(1) == 0) {
-                    JOptionPane.showMessageDialog(null, "Venda com ID = " + tempID + " não existe.");
-                    return;
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Erro ao verificar existência da venda: " + e.getMessage());
-            return;
-        }
-
-        String vendaSql = "DELETE FROM vendas WHERE vendaID = ?";
-        String itensVendaSql = "DELETE FROM itens_venda WHERE vendaID = ?";
+        // Verificar se a venda existe
+        String vendaSql = "SELECT * FROM vendas WHERE vendaID = ?";
+        String itensVendaSql = "SELECT * FROM itens_venda WHERE vendaID = ?";
 
         try (Connection connection = ConnectionDB.getDatabaseConnection();
              PreparedStatement vendaPs = connection.prepareStatement(vendaSql);
              PreparedStatement itensVendaPs = connection.prepareStatement(itensVendaSql)) {
 
-            connection.setAutoCommit(false); // Iniciar transação
-
-            itensVendaPs.setInt(1, tempID);
             vendaPs.setInt(1, tempID);
+            itensVendaPs.setInt(1, tempID);
 
-            // Remover os itens da venda
-            itensVendaPs.executeUpdate();
-            // Remover a venda
-            vendaPs.executeUpdate();
+            ResultSet vendaRs = vendaPs.executeQuery();
+            ResultSet itensVendaRs = itensVendaPs.executeQuery();
 
-            connection.commit(); // Confirmar transação
+            if (!vendaRs.next()) {
+                JOptionPane.showMessageDialog(null, "Venda não encontrada com o ID: " + tempID);
+                return;
+            }
 
-            JOptionPane.showMessageDialog(null, "Venda de ID = " + tempID + " foi excluída!");
+            // Processar itens vendidos e atualizar a quantidade no estoque
+            while (itensVendaRs.next()) {
+                int itemID = itensVendaRs.getInt("itemID");
+                int quantidadeVendida = itensVendaRs.getInt("quantidade");
+
+                // Atualizar a quantidade do produto no estoque
+                String updateQuantidadeSql = "UPDATE ITEMMENU SET quantidade = quantidade + ? WHERE id = ?";
+                try (PreparedStatement updateQuantidadePs = connection.prepareStatement(updateQuantidadeSql)) {
+                    updateQuantidadePs.setInt(1, quantidadeVendida);
+                    updateQuantidadePs.setInt(2, itemID);
+                    updateQuantidadePs.executeUpdate();
+                }
+            }
+
+            // Excluir os itens da venda
+            String deleteItensVendaSql = "DELETE FROM itens_venda WHERE vendaID = ?";
+            try (PreparedStatement deleteItensVendaPs = connection.prepareStatement(deleteItensVendaSql)) {
+                deleteItensVendaPs.setInt(1, tempID);
+                deleteItensVendaPs.executeUpdate();
+            }
+
+            // Excluir a venda
+            String deleteVendaSql = "DELETE FROM vendas WHERE vendaID = ?";
+            try (PreparedStatement deleteVendaPs = connection.prepareStatement(deleteVendaSql)) {
+                deleteVendaPs.setInt(1, tempID);
+                deleteVendaPs.executeUpdate();
+            }
+
+            JOptionPane.showMessageDialog(null, "Venda de ID = " + tempID + " foi excluída com sucesso!");
 
         } catch (SQLException e) {
-            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Erro ao excluir venda: " + e.getMessage());
         }
     }
