@@ -150,39 +150,39 @@ Classe principal que inicializa a aplicação.
    USE cafeteria_db;
 
    -- Criar a tabela de produtos
-   CREATE TABLE ItemMenu (
-       ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-       codigo INT NOT NULL,
-       tipo INT NOT NULL,
-       nome VARCHAR(255) NOT NULL,
-       precoCusto DOUBLE NOT NULL,
-       precoVenda DOUBLE NOT NULL,
-       disponivel BOOLEAN NOT NULL,
-       quantidade INT NOT NULL,
-       descricao LONGTEXT NOT NULL
-   );
+	CREATE TABLE ItemMenu (
+		ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+		codigo INT NOT NULL,
+		tipo INT NOT NULL,
+		nome VARCHAR(255) NOT NULL,
+		precoCusto DOUBLE NOT NULL,
+		precoVenda DOUBLE NOT NULL,
+		disponivel BOOLEAN NOT NULL,
+		quantidade INT NOT NULL,
+		descricao LONGTEXT NOT NULL
+	);
 
    -- Criar a tabela de vendas
-   CREATE TABLE vendas (
-       vendaID INT AUTO_INCREMENT PRIMARY KEY,
-       dataHora DATETIME NOT NULL,
-       cliente VARCHAR(255) NOT NULL,
-       valorVenda DOUBLE(10, 2) NOT NULL,
-       valorCusto DOUBLE(10, 2) NOT NULL,
-       valorLucro DOUBLE(10,2) NOT NULL,
-       valorDesconto DOUBLE(10, 2) NOT NULL
-   );
+	CREATE TABLE vendas (
+		vendaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+		dataHora DATETIME NOT NULL,
+		cliente VARCHAR(255) NOT NULL,
+		valorVenda DOUBLE NOT NULL,
+		valorCusto DOUBLE NOT NULL,
+		valorLucro DOUBLE NOT NULL,
+		valorDesconto DOUBLE NOT NULL
+	);
 
    -- Criar a tabela de itens da venda
-   CREATE TABLE itens_venda (
-       id INT AUTO_INCREMENT PRIMARY KEY,
-       vendaID INT,
-       itemID INT,
-       quantidade INT,
-       subtotal DOUBLE,
-       FOREIGN KEY (vendaID) REFERENCES vendas(vendaID),
-       FOREIGN KEY (itemID) REFERENCES ItemMenu(ID)
-   );
+	CREATE TABLE itens_venda (
+		id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+		vendaID INT,
+		itemID INT,
+		quantidade INT,
+		subtotal DOUBLE,
+		FOREIGN KEY (vendaID) REFERENCES vendas(vendaID),
+		FOREIGN KEY (itemID) REFERENCES itemmenu(ID)
+	);
    ```
 
 2. **Configuração da Classe `ConnectionDB`:**

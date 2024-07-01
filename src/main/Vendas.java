@@ -93,67 +93,77 @@ public class Vendas {
 
 	// Método para realizar o input dos valores das vendas
 	public void inputVenda() {
-		// Adicionar nome do cliente
-		this.cliente = JOptionPane.showInputDialog("Digite o nome do cliente:");
+        // Adicionar nome do cliente
+        this.cliente = JOptionPane.showInputDialog("Digite o nome do cliente:");
 
-		// Verificar se o cliente cancelou a entrada
-		if (this.cliente == null) {
-			return;
-		}
+        // Verificar se o cliente cancelou a entrada
+        if (this.cliente == null) {
+            return;
+        }
 
-		// Adicionar horário da venda
-		this.dataHora = LocalDateTime.now();
+        // Adicionar horário da venda
+        this.dataHora = LocalDateTime.now();
 
-		while (true) {
-			String itemIDStr = JOptionPane.showInputDialog("Digite o ID do item (0 para finalizar):");
-			if (itemIDStr == null || itemIDStr.trim().isEmpty()) {
-				break;
-			}
+        while (true) {
+            String itemIDStr = JOptionPane.showInputDialog("Digite o ID do item (0 para finalizar):");
+            if (itemIDStr == null || itemIDStr.trim().isEmpty()) {
+                break;
+            }
 
-			int itemID;
-			try {
-				itemID = Integer.parseInt(itemIDStr.trim());
-			} catch (NumberFormatException e) {
-				JOptionPane.showMessageDialog(null, "ID do item inválido. Por favor, insira um número válido.");
-				continue;
-			}
+            int itemID;
+            try {
+                itemID = Integer.parseInt(itemIDStr.trim());
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "ID do item inválido. Por favor, insira um número válido.");
+                continue;
+            }
 
-			if (itemID == 0) {
-				break;
-			}
+            if (itemID == 0) {
+                break;
+            }
 
-			ItemMenu item = consultarItemNoBanco(itemID);
+            ItemMenu item = consultarItemNoBanco(itemID);
 
-			if (item != null) {
-				String quantidadeStr = JOptionPane.showInputDialog("Digite a quantidade que foi vendida do produto:");
-				if (quantidadeStr == null || quantidadeStr.trim().isEmpty()) {
-					continue;
-				}
+            if (item != null) {
+                if (!item.isDisponivel()) {
+                    JOptionPane.showMessageDialog(null, "O produto não está disponível.");
+                    continue;
+                }
 
-				int quantidade;
-				try {
-					quantidade = Integer.parseInt(quantidadeStr.trim());
-				} catch (NumberFormatException e) {
-					JOptionPane.showMessageDialog(null, "Quantidade inválida. Por favor, insira um número válido.");
-					continue;
-				}
+                String quantidadeStr = JOptionPane.showInputDialog("Digite a quantidade que foi vendida do produto:");
+                if (quantidadeStr == null || quantidadeStr.trim().isEmpty()) {
+                    continue;
+                }
 
-				if (quantidade > 0) {
-					ItemVenda itemVenda = new ItemVenda(item, quantidade);
-					itensVendidos.add(itemVenda);
+                int quantidade;
+                try {
+                    quantidade = Integer.parseInt(quantidadeStr.trim());
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(null, "Quantidade inválida. Por favor, insira um número válido.");
+                    continue;
+                }
 
-					// Atualizar a quantidade no estoque
-					item.setQuantidade(item.getQuantidade() - quantidade);
-					if (item.getQuantidade() == 0) {
-						item.setDisponivel(false);
-					}
-					atualizarQuantidadeNoBanco(item);
-				}
-			} else {
-				JOptionPane.showMessageDialog(null, "Produto não encontrado com o ID: " + itemID);
-			}
-		}
-	}
+                if (quantidade > item.getQuantidade()) {
+                    JOptionPane.showMessageDialog(null, "Quantidade insuficiente em estoque. Estoque disponível: " + item.getQuantidade());
+                    continue;
+                }
+
+                if (quantidade > 0) {
+                    ItemVenda itemVenda = new ItemVenda(item, quantidade);
+                    itensVendidos.add(itemVenda);
+
+                    // Atualizar a quantidade no estoque
+                    item.setQuantidade(item.getQuantidade() - quantidade);
+                    if (item.getQuantidade() == 0) {
+                        item.setDisponivel(false);
+                    }
+                    atualizarQuantidadeNoBanco(item);
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "Produto não encontrado com o ID: " + itemID);
+            }
+        }
+    }
 
 	// Consulta um item no banco de dados pelo seu ID
 	private ItemMenu consultarItemNoBanco(int itemID) {
