@@ -1,11 +1,5 @@
 # Projeto: Sistema de Gerenciamento de Cafeteria
 
-**Autores**
-
-- Nome do aluno: Vitor Antonio de Almeida Lacerda. N°USP: 12544761
-- Nome do aluno: Bruno Garcia de Oliveira Breda. N°USP: 11212702
-- Nome do aluno: Felipe Oliveira Carvalho. N°USP: 14613879
-
 ## Descrição do Projeto
 
 Este projeto é um sistema de gerenciamento de uma cafeteria, implementado em Java, utilizando uma interface gráfica (GUI) e integração com um banco de dados MySQL. O sistema permite a adição, edição, listagem e exclusão de produtos e vendas. Ele foi desenvolvido para a disciplina de Programação Orientada a Objetos do curso de Sistemas de Informação da USP.
